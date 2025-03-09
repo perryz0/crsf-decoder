@@ -46,15 +46,15 @@ def crc8_check(packet):
 def parse_crsf_packet(packet):
     """Parses CRSF telemetry data and prints human-readable output"""
     if len(packet) < 4:
-        print(f"⚠️ Skipping invalid packet: {packet.hex()}")
+        print(f"xxxxx Skipping invalid packet: {packet.hex()}")
         return None  
 
     if packet[0] != CRSF_SYNC:
-        print(f"⚠️ Skipping non-CRSF packet: {packet.hex()}")
+        print(f"xxxxx Skipping non-CRSF packet: {packet.hex()}")
         return None  
 
     if not crc8_check(packet):
-        print(f"❌ CRC Mismatch: {packet.hex()}")
+        print(f"xxxxx CRC Mismatch: {packet.hex()}")
         return None
 
     packet_type = packet[2]
@@ -64,11 +64,11 @@ def parse_crsf_packet(packet):
         rssi2 = packet[4]
         lq = packet[5]
         snr = struct.unpack("b", bytes([packet[6]]))[0]  # Signed int
-        print(f"📶 RSSI: {rssi1}/{rssi2}, LQ: {lq}, SNR: {snr}")
+        print(f"----- RSSI: {rssi1}/{rssi2}, LQ: {lq}, SNR: {snr}")
 
     elif packet_type == CRSFPacketTypes.BATTERY_SENSOR:
         voltage = struct.unpack(">H", packet[3:5])[0] / 10.0
-        print(f"🔋 Battery: {voltage:.1f}V")
+        print(f"----- Battery: {voltage:.1f}V")
 
     elif packet_type == CRSFPacketTypes.GPS:
         lat = struct.unpack(">i", packet[3:7])[0] / 1e7
@@ -76,26 +76,26 @@ def parse_crsf_packet(packet):
         speed = struct.unpack(">H", packet[11:13])[0] / 36.0
         altitude = struct.unpack(">H", packet[15:17])[0] - 1000
         sats = packet[17]
-        print(f"📡 GPS: {lat:.6f}, {lon:.6f} | Alt: {altitude}m | Speed: {speed:.1f}m/s | Sats: {sats}")
+        print(f"----- GPS: {lat:.6f}, {lon:.6f} | Alt: {altitude}m | Speed: {speed:.1f}m/s | Sats: {sats}")
 
     elif packet_type == CRSFPacketTypes.ATTITUDE:
         pitch = struct.unpack(">h", packet[3:5])[0] / 10000.0
         roll = struct.unpack(">h", packet[5:7])[0] / 10000.0
         yaw = struct.unpack(">h", packet[7:9])[0] / 10000.0
-        print(f"🎛️ Attitude: Pitch={pitch:.2f} Roll={roll:.2f} Yaw={yaw:.2f}")
+        print(f"----- Attitude: Pitch={pitch:.2f} Roll={roll:.2f} Yaw={yaw:.2f}")
 
     elif packet_type == CRSFPacketTypes.FLIGHT_MODE:
         mode = ''.join(map(chr, packet[3:-2]))
-        print(f"✈️ Flight Mode: {mode}")
+        print(f"----- Flight Mode: {mode}")
 
     else:
-        print(f"🛑 Unknown Packet Type: 0x{packet_type:02X} | Data: {packet.hex()}")
+        print(f"----- Unknown Packet Type: 0x{packet_type:02X} | Data: {packet.hex()}")
 
 def read_crsf_serial(port, baud_rate):
     """Reads CRSF packets from a serial port and decodes telemetry"""
     try:
         with serial.Serial(port, baud_rate, timeout=1) as ser:
-            print(f"✅ Connected to {port} at {baud_rate} baud.")
+            print(f"----- Connected to {port} at {baud_rate} baud.")
             buffer = bytearray()
 
             while True:
@@ -105,7 +105,7 @@ def read_crsf_serial(port, baud_rate):
                 while len(buffer) >= 4:
                     expected_len = buffer[1] + 2
                     if expected_len > CRSF_MAX_PACKET_SIZE or expected_len < 4:
-                        print(f"⚠️ Bad packet length: {expected_len}. Resetting buffer.")
+                        print(f"xxxxx Bad packet length: {expected_len}. Resetting buffer.")
                         buffer.clear()
                         break
 
@@ -117,7 +117,7 @@ def read_crsf_serial(port, baud_rate):
                         break
 
     except serial.SerialException as e:
-        print(f"❌ Serial connection error: {e}")
+        print(f"----- Serial connection error: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse CRSF telemetry from a serial port.")
